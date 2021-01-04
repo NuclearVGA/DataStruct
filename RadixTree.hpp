@@ -2,7 +2,7 @@
 #include <cstdlib> // malloc
 #include <cstring> // memset
 #define LTLT(a, b, c) ((a) < (b) && (b) < (c))
-#define SLOT(a, b) (((a) >> ((b) << 3)) & 255)
+#define U8AT(a, b) (((a) >> ((b) << 3)) & 255)
 
 template <typename uintK = unsigned, typename ptrV = void, unsigned lastPrefix = 1>
 class RadixTree // lastPrefix = 1 : 前缀匹配最低字节以上的所有字节，关键字局部性很强时使用
@@ -85,7 +85,7 @@ public:
             level = KLEN;
         trace[0] = nullptr;
         while (trace[level] && level--)
-            trace[level] = trace[level + 1]->slots[SLOT(oldKey, level)]; // 记录节点访问路径
+            trace[level] = trace[level + 1]->slots[U8AT(oldKey, level)]; // 记录节点访问路径
         return (ptrV *)trace[0];
     }
 
@@ -94,14 +94,14 @@ public:
         if (search(key))
         {
             if (force) // 强制覆盖原值
-                trace[1]->slots[SLOT(oldKey, 0)] = (rtNode *)val;
+                trace[1]->slots[U8AT(oldKey, 0)] = (rtNode *)val;
         }
         else
         {
             treeSize++;
             for (trace[level + 1]->size++; level > 0; level--)
-                trace[level + 1]->slots[SLOT(oldKey, level)] = trace[level] = new rtNode();
-            trace[1]->slots[SLOT(oldKey, 0)] = (rtNode *)val;
+                trace[level + 1]->slots[U8AT(oldKey, level)] = trace[level] = new rtNode();
+            trace[1]->slots[U8AT(oldKey, 0)] = (rtNode *)val;
         }
         return (ptrV *)trace[0];
     }
@@ -111,10 +111,10 @@ public:
         if (search(key))
         {
             treeSize--;
-            for (trace[level = 1]->slots[SLOT(oldKey, 0)] = nullptr; !--(trace[level]->size); level++)
+            for (trace[level = 1]->slots[U8AT(oldKey, 0)] = nullptr; !--(trace[level]->size); level++)
             {
                 delete trace[level];
-                trace[level + 1]->slots[SLOT(oldKey, level)] = trace[level] = nullptr;
+                trace[level + 1]->slots[U8AT(oldKey, level)] = trace[level] = nullptr;
             }
         }
         return (ptrV *)trace[0];
